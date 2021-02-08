@@ -23,6 +23,7 @@ class Client(models.Model):
         verbose_name_plural = 'Клиенты'
         ordering = ['Surname']
 
+
 class Employee(models.Model):
     Name = models.CharField(max_length=64, verbose_name='Имя')
     Surname = models.CharField(max_length=64, verbose_name='Фамилия')
@@ -59,11 +60,11 @@ class Order(models.Model):
 
 
 class OrderProducts(models.Model):
-    Kind = models.CharField(max_length=32, verbose_name='Тип', default='Перья')
+    Kind = models.CharField(max_length=64  , verbose_name='Тип', default='Перья')
     Price = models.FloatField( default=0, verbose_name='Цена')
     Cost = models.FloatField( default=0, verbose_name='Стоимость')
     Count = models.IntegerField( default=0, verbose_name='Количество')
-    OrderID = models.ForeignKey('Order', on_delete=models.PROTECT, null=True, verbose_name='Заказ')
+    OrderID = models.ForeignKey('Order', on_delete=models.CASCADE, null=True, verbose_name='Заказ')
     ProductID = models.ForeignKey('Product', on_delete=models.PROTECT, null=True, verbose_name='Товар')
 
     def __str__(self):
@@ -77,7 +78,7 @@ class OrderProducts(models.Model):
 class Ostrich(models.Model):
     Nickname = models.CharField(max_length=64, verbose_name='Кличка')
     Sex = models.CharField(max_length=64, verbose_name='Пол')
-    HealthStatus=models.CharField(max_length=64, verbose_name='Статус здоровья')
+    HealthStatus=models.CharField(max_length=32, verbose_name='Статус здоровья')
     PaddockID = models.ForeignKey('Paddock', on_delete=models.PROTECT, null=True, verbose_name='Загон')
     VaccinationID = models.ForeignKey('Vaccination', on_delete=models.PROTECT, null=True, verbose_name='Вакцинация')
     def __str__(self):
@@ -105,7 +106,6 @@ class Paddock(models.Model):
 class Product(models.Model):
     Kind = models.CharField(max_length=32, verbose_name='Тип')
     Price = models.FloatField(blank=True, default=0, verbose_name='Цена')
-    DateOfReceiving = models.DateTimeField(auto_now_add= True, verbose_name='Дата получения')
     Count = models.IntegerField(blank=True, default=0, verbose_name='Количество')
     WarehousId = models.ForeignKey('Warehouse', on_delete=models.PROTECT, null=True, verbose_name='Склад')
 
@@ -116,12 +116,14 @@ class Product(models.Model):
         verbose_name = 'Товар'
         verbose_name_plural = 'Товары'
         ordering = ['Kind']
+
+
 class Provider(models.Model):
-    Name = models.CharField(max_length=64)
-    Surname = models.CharField(max_length=64)
-    Patronymic = models.CharField(max_length=64)
-    Address = models.CharField(max_length=64)
-    PhoneNumber = models.IntegerField(blank=True, default=0)
+    Name = models.CharField(max_length=64, verbose_name='Имя')
+    Surname = models.CharField(max_length=64, verbose_name='Фамилия')
+    Patronymic = models.CharField(max_length=64, verbose_name='Отчество')
+    Address = models.CharField(max_length=64, verbose_name='Адрес')
+    PhoneNumber = models.IntegerField(blank=True, default=0, verbose_name='Номер телефона')
 
     def __str__(self):
         return str(self.pk)+ "  "+self.Name+ "  "+self.Surname+ "  "+self.Patronymic+ "  "+self.Address+ "  "+str(self.PhoneNumber)
@@ -131,10 +133,10 @@ class Provider(models.Model):
         verbose_name_plural = 'Поставщики'
         ordering = ['Surname']
 class RawMaterial(models.Model):
-    Kind = models.CharField(max_length=32)
-    Price = models.FloatField(blank=True, default=0)
-    Count = models.FloatField(blank=True, default=0)
-    WarehousId = models.ForeignKey('Warehouse', on_delete=models.PROTECT, null=True)
+    Kind = models.CharField(max_length=32,verbose_name='Тип', unique=True)
+    Price = models.FloatField(blank=True, default=0,verbose_name='Цена')
+    Count = models.FloatField(blank=True, default=0,verbose_name='Количество')
+    WarehousId = models.ForeignKey('Warehouse', on_delete=models.PROTECT, null=True,verbose_name='Склад')
     def __str__(self):
         return str(self.pk)+ "  "+self.Kind+ "  "+self.Kind+ "  "+str(self.Count)
 
@@ -143,12 +145,12 @@ class RawMaterial(models.Model):
         verbose_name_plural = 'Сырье'
         ordering = ['Price']
 class Supply(models.Model):
-    DateOfSupply = models.DateTimeField(auto_now = True)
-    Price = models.FloatField(blank=True, default=0)
-    Count = models.FloatField(blank=True, default=0)
-    Cost =  models.FloatField(blank=True, default=0)
-    RawMaterialID = models.ForeignKey('RawMaterial', on_delete=models.PROTECT, null=True)
-    ProviderID = models.ForeignKey('Provider', on_delete=models.PROTECT, null=True)
+    DateOfSupply = models.DateTimeField(auto_now = True,verbose_name='Дата поставки')
+    Price = models.FloatField(blank=True, default=0,verbose_name='Цена')
+    Count = models.FloatField(blank=True, default=0,verbose_name='Количество')
+    Cost =  models.FloatField(blank=True, default=0,verbose_name='Стоимость')
+    RawMaterialID = models.ForeignKey('RawMaterial', on_delete=models.PROTECT,null=True,verbose_name='Сырье')
+    ProviderID = models.ForeignKey('Provider', on_delete=models.PROTECT,null=True,verbose_name='Поставщик')
 
     def __str__(self):
         return str(self.pk)+ "  "+str(self.DateOfSupply)+ "  "+ str(self.Price)+ "  "+ str(self.Count)+ "  "+ str(self.Cost)
@@ -157,8 +159,15 @@ class Supply(models.Model):
         verbose_name = 'Поставка'
         verbose_name_plural = 'Поставки'
         ordering = ['Cost']
+
+    def save(self, *args, **kwargs):
+        raw = RawMaterial.objects.get(pk=self.RawMaterialID.pk)
+        raw.Count += self.Count
+        raw.save()
+        super(Supply, self).save(*args, **kwargs)
+
 class Vaccination(models.Model):
-    ApplicationDate = models.DateField(auto_now_add= True)
+    ApplicationDate = models.DateField(auto_now_add= True,verbose_name='Дата')
     def __str__(self):
         return str(self.pk)+ "  "+str(self.ApplicationDate)
 
@@ -166,10 +175,10 @@ class Vaccination(models.Model):
         verbose_name = 'Вакцинация'
         verbose_name_plural = 'Вакцинации'
 class Vaccine(models.Model):
-    Name  = models.CharField(max_length=64)
-    Diseade = models.CharField(max_length=64)
-    Validity = models.IntegerField(blank=True, default=0)
-    VaccinationID =models.ForeignKey('Vaccination', on_delete=models.PROTECT, null=True)
+    Name  = models.CharField(max_length=64,verbose_name='Наименование')
+    Diseade = models.CharField(max_length=64,verbose_name='Болезнь')
+    Validity = models.IntegerField(blank=True, default=0,verbose_name='Срок действия')
+    VaccinationID =models.ForeignKey('Vaccination', on_delete=models.PROTECT, null=True,verbose_name='Вакцинация')
     def __str__(self):
         return str(self.pk)+ "  "+self.Name+ "  "+self.Diseade+ "  "+str(self.Validity)
 
@@ -178,8 +187,8 @@ class Vaccine(models.Model):
         verbose_name_plural = 'Вакцины'
         ordering = ['Diseade']
 class Warehouse(models.Model):
-    Address =models.CharField(max_length=128)
-    Name = models.CharField(max_length=64)
+    Address =models.CharField(max_length=128,verbose_name='Адрес')
+    Name = models.CharField(max_length=64,verbose_name='Название')
 
     def __str__(self):
         return str(self.pk)+ "  "+self.Address+ "  "+ self.Name

@@ -187,13 +187,14 @@ def orders(request):
     order_products = []
     print(order)
     kolvo = 0
-    for op in OrderProducts.objects.all():
-        if order.pk == op.OrderID.pk:
-            kolvo += 1
-    if kolvo == 0:
-        ordersIsExist = False
+    if ordersIsExist:
+        for op in OrderProducts.objects.all():
+            if order.pk == op.OrderID.pk:
+                kolvo += 1
+        if kolvo == 0:
+            ordersIsExist = False
 
-    if order!= None:
+    if ordersIsExist:
         for op in OrderProducts.objects.all():
             if order.pk == op.OrderID.pk:
                 order_products.append(op)

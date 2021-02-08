@@ -45,7 +45,7 @@
 		</a>
 		<span id="surname">
 			<div class="headDiv">
-				{{username}}
+				{{username}} <a href ="/exit" type="button" class="btn btn-success">Выйти</a>
 			</div>
 		</span>
 		{%	endif %}
@@ -82,7 +82,13 @@
 				<div class="invalid-feedback">
 					{{form.title.errors}}
 				</div>
+			  {% if request.user.is_authenticated %}
 		  	<button  class="btn btn-primary" type="submit" name = {{ item.pk }}>Заказать</button>
+			  {% else%}
+			  <div class="alert alert-danger" role="alert">
+				Чтобы заказать товар, для начала авторизуйтесь!
+			  </div>
+			  {% endif %}
 		  </div>
 		</div>
 	</form>

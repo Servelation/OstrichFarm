@@ -34,12 +34,24 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    # 'django.contrib.sites',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 'django.contrib.flatpages',
     'ferm.apps.FermConfig',
     'widget_tweaks',
+    'reversion',
+    'import_export',
+    'adminbuttons',
+    'dbbackup',
+
 ]
+
+DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+DBBACKUP_STORAGE_OPTIONS = {'location': BASE_DIR / 'backup'}
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
